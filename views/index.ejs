@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <style>
+#messageBoard {
+    width: 100%;
+    height: 300px;
+    overflow: scroll;
+}
+
+fieldset {
+    width: 80%;
+    height: 300px;
+}
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div id="board">
+            <h3>Conversation Board</h3>
+            <fieldset>
+                <div id="messageBoard">
+                    <!-- Messages get appended here -->
+                </div>
+            </fieldset>
+                <form id="messageSubmit">
+                    <input type="text" id = "messageField">
+                    <input type="submit" value = "send">
+                </form>
+        </div>
+    </div>   
+
+<script type = "text/javascript" src= "/socket.io/socket.io.js"></script>
+<script>
+    $(document).ready(function() {
+        function scrollBottom() {
+            $("#messageBoard").animate({scrollTop: $("#messageBoard").height()}, "fast");
+        }
+        var socket = io.connect("http://localhost:8000");
+        var verification = "check"
+        socket.emit("newUserInput", verification)
+
+        socket.on("userInput", function(data) {
+            console.log("now I'm here! " + data)
+            if (data == "none" || data[0].name == null) {
+                var newUsername = prompt("Join our chatroom! Enter your name below:")
+                socket.emit("newUsername", newUsername)
+            }
+            else {
+                function parseData() {
+                    var longMessage = ""
+                    for (var i = 0; i < data.length; i++) {
+                        console.log(data[i].name)
+                        longMessage += `<p>${data[i].name}: ${data[i].message}</p>`
+                    }
+                    return longMessage;
+                }
+                document.getElementById("messageBoard").innerHTML = parseData()
+            }
+        })
+
+        if ($("#messageBoard").scrollTop.height()) {
+            setInterval(scrollBottom(), 1000);
+        }
+
+
+        $("#messageSubmit").submit(function() {
+            var message = $("#messageField").val();
+            socket.emit("newUserInput", message);
+            $("#messageField").val("")
+            scrollBottom();
+            scrollBottom();
+            return false;
+        })
+    })   
+</script>
+</body>
+</html>
